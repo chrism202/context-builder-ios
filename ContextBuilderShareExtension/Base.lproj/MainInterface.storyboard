@@ -16,16 +16,13 @@
                             <stackView opaque="NO" contentMode="scaleToFill" axis="vertical" distribution="fill" alignment="center" spacing="16" translatesAutoresizingMaskIntoConstraints="NO" id="Stack1">
                                 <subviews>
                                     <activityIndicatorView contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" animating="YES" style="large" translatesAutoresizingMaskIntoConstraints="NO" id="Activity1">
-                                        <color key="color" systemColor="systemBlueColor"/>
                                     </activityIndicatorView>
                                     <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Preparing…" textAlignment="center" lineBreakMode="wordWrap" numberOfLines="0" translatesAutoresizingMaskIntoConstraints="NO" id="Label1">
                                         <fontDescription key="fontDescription" type="system" weight="semibold" pointSize="17"/>
-                                        <color key="textColor" systemColor="labelColor"/>
                                     </label>
                                 </subviews>
                             </stackView>
                         </subviews>
-                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
                             <constraint firstItem="Stack1" firstAttribute="centerX" secondItem="View1" secondAttribute="centerX" id="CenterX"/>
                             <constraint firstItem="Stack1" firstAttribute="centerY" secondItem="View1" secondAttribute="centerY" id="CenterY"/>
@@ -42,15 +39,4 @@
             </objects>
         </scene>
     </scenes>
-    <resources>
-        <systemColor name="labelColor">
-            <color white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-        </systemColor>
-        <systemColor name="systemBackgroundColor">
-            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-        </systemColor>
-        <systemColor name="systemBlueColor">
-            <color red="0.0" green="0.47843137250000001" blue="1" alpha="1" colorSpace="sRGB" colorSpace="calibrated"/>
-        </systemColor>
-    </resources>
 </document>

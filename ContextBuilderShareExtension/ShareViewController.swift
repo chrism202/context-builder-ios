@@ -25,6 +25,7 @@ final class ShareViewController: UIViewController {
         }
     }
 
+    @MainActor
     private func processSharedItems() async {
         await updateStatus("Saving to Context Builder…", isLoading: true)
 
@@ -33,10 +34,16 @@ final class ShareViewController: UIViewController {
             return
         }
 
-        let sourceApp = extensionContext.userInfo?[NSExtensionContextSourceApplicationBundleIdentifierKey] as? String
-            ?? extensionContext.userInfo?["NSExtensionContextSourceApplicationKey"] as? String
-        let providers = extensionContext.inputItems.compactMap { $0 as? NSExtensionItem }
-            .flatMap { $0.attachments ?? [] }
+        let extensionItems: [NSExtensionItem] = extensionContext.inputItems.compactMap { $0 as? NSExtensionItem }
+        let sourceApplicationBundleIdentifierKey = "NSExtensionContextSourceApplicationBundleIdentifierKey"
+        let legacySourceApplicationKey = "NSExtensionContextSourceApplicationKey"
+
+        let sourceApp = extensionItems.lazy.compactMap { item -> String? in
+            guard let info = item.userInfo else { return nil }
+            return info[sourceApplicationBundleIdentifierKey] as? String
+                ?? info[legacySourceApplicationKey] as? String
+        }.first
+        let providers: [NSItemProvider] = extensionItems.flatMap { $0.attachments ?? [] }
 
         guard !providers.isEmpty else {
             await updateStatus("Nothing to save", isLoading: false)

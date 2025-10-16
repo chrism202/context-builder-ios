@@ -42,8 +42,6 @@
         <string>MainInterface</string>
         <key>NSExtensionPointIdentifier</key>
         <string>com.apple.share-services</string>
-        <key>NSExtensionPrincipalClass</key>
-        <string>$(PRODUCT_MODULE_NAME).ShareViewController</string>
     </dict>
 </dict>
 </plist>

@@ -142,8 +142,11 @@ final class ContextStorage {
     }
 
     private func fileExtension(for typeIdentifier: String?, originalFilename: String?) -> String {
-        if let originalFilename, let ext = URL(fileURLWithPath: originalFilename).pathExtension, !ext.isEmpty {
-            return ext
+        if let originalFilename {
+            let ext = URL(fileURLWithPath: originalFilename).pathExtension
+            if !ext.isEmpty {
+                return ext
+            }
         }
         if let typeIdentifier, let type = UTType(typeIdentifier), let preferredExt = type.preferredFilenameExtension {
             return preferredExt
