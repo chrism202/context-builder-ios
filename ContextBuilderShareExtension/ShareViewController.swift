@@ -33,7 +33,8 @@ final class ShareViewController: UIViewController {
             return
         }
 
-        let sourceApp = extensionContext.sourceApplicationBundleIdentifier
+        let sourceApp = extensionContext.userInfo?[NSExtensionContextSourceApplicationBundleIdentifierKey] as? String
+            ?? extensionContext.userInfo?["NSExtensionContextSourceApplicationKey"] as? String
         let providers = extensionContext.inputItems.compactMap { $0 as? NSExtensionItem }
             .flatMap { $0.attachments ?? [] }
 
