@@ -1,0 +1,37 @@
+{
+  "name": "context-builder-backend",
+  "version": "1.0.0",
+  "description": "AWS Lambda backend for Context Builder with MCP server support",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc && cp package.json dist/",
+    "watch": "tsc --watch",
+    "clean": "rm -rf dist",
+    "deploy": "npm run build && sam deploy --guided",
+    "deploy:fast": "npm run build && sam deploy",
+    "package": "npm run build && sam package --output-template-file packaged.yaml --s3-bucket YOUR_DEPLOYMENT_BUCKET",
+    "local:upload": "sam local start-api",
+    "local:invoke": "sam local invoke"
+  },
+  "keywords": [
+    "context-builder",
+    "mcp",
+    "aws-lambda",
+    "serverless"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.699.0",
+    "@aws-sdk/client-s3": "^3.699.0",
+    "@aws-sdk/lib-dynamodb": "^3.699.0",
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "uuid": "^11.0.3"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.145",
+    "@types/node": "^22.10.2",
+    "@types/uuid": "^10.0.0",
+    "typescript": "^5.7.2"
+  }
+}

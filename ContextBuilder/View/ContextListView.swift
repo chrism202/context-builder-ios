@@ -2,6 +2,8 @@ import SwiftUI
 
 struct ContextListView: View {
     @ObservedObject var viewModel: ContextViewModel
+    @State private var showingSettings = false
+    @State private var showingUploadAlert = false
 
     var body: some View {
         Group {
@@ -13,10 +15,60 @@ struct ContextListView: View {
         }
         .navigationTitle("Context Vault")
         .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button(action: viewModel.refresh) {
-                    Image(systemName: "arrow.clockwise")
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    showingSettings = true
+                } label: {
+                    Image(systemName: "gear")
                 }
+            }
+
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Menu {
+                    Button {
+                        viewModel.refresh()
+                    } label: {
+                        Label("Refresh", systemImage: "arrow.clockwise")
+                    }
+
+                    if !viewModel.items.isEmpty {
+                        Button {
+                            showingUploadAlert = true
+                        } label: {
+                            Label("Upload to Cloud", systemImage: "icloud.and.arrow.up")
+                        }
+                        .disabled(viewModel.isUploading)
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                }
+            }
+        }
+        .sheet(isPresented: $showingSettings) {
+            SettingsView()
+        }
+        .alert("Upload Context", isPresented: $showingUploadAlert) {
+            Button("Cancel", role: .cancel) { }
+            Button("Upload All") {
+                viewModel.uploadAllItems()
+            }
+        } message: {
+            Text("Upload all \(viewModel.items.count) items to the cloud?")
+        }
+        .alert(
+            "Upload Error",
+            isPresented: .constant(viewModel.uploadError != nil),
+            presenting: viewModel.uploadError
+        ) { _ in
+            Button("OK") {
+                viewModel.uploadError = nil
+            }
+        } message: { error in
+            Text(error.localizedDescription)
+        }
+        .overlay {
+            if viewModel.isUploading {
+                uploadingOverlay
             }
         }
     }
@@ -52,6 +104,27 @@ struct ContextListView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.systemGroupedBackground))
+    }
+
+    private var uploadingOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.3)
+                .ignoresSafeArea()
+
+            VStack(spacing: 16) {
+                ProgressView()
+                    .scaleEffect(1.5)
+                    .tint(.white)
+                Text("Uploading to Cloud...")
+                    .font(.headline)
+                    .foregroundColor(.white)
+            }
+            .padding(32)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(.systemGray))
+            )
+        }
     }
 }
 

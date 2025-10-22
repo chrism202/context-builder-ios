@@ -1,0 +1,38 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build
+dist/
+*.js
+*.d.ts
+*.js.map
+!jest.config.js
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# SAM
+.aws-sam/
+packaged.yaml
+samconfig.toml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+
+# Logs
+*.log

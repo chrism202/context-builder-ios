@@ -1,0 +1,189 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Context Builder Cloud Infrastructure
+
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+    Description: Deployment stage (dev, prod)
+    AllowedValues:
+      - dev
+      - prod
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Timeout: 30
+    MemorySize: 512
+    Environment:
+      Variables:
+        STAGE: !Ref Stage
+        CONTEXT_TABLE_NAME: !Ref ContextItemsTable
+        ATTACHMENTS_BUCKET_NAME: !Ref AttachmentsBucket
+
+Resources:
+  # DynamoDB Table for Context Items
+  ContextItemsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ContextItems-${Stage}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: userId
+          AttributeType: S
+        - AttributeName: id
+          AttributeType: S
+        - AttributeName: createdAt
+          AttributeType: S
+      KeySchema:
+        - AttributeName: userId
+          KeyType: HASH
+        - AttributeName: id
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: CreatedAtIndex
+          KeySchema:
+            - AttributeName: userId
+              KeyType: HASH
+            - AttributeName: createdAt
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  # S3 Bucket for Attachments
+  AttachmentsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub context-builder-attachments-${Stage}-${AWS::AccountId}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: DeleteOldVersions
+            Status: Enabled
+            NoncurrentVersionExpirationInDays: 30
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders:
+              - '*'
+            AllowedMethods:
+              - GET
+              - PUT
+              - POST
+            AllowedOrigins:
+              - '*'
+            MaxAge: 3000
+
+  # Lambda Function for Upload Handler
+  UploadFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub context-builder-upload-${Stage}
+      CodeUri: ./dist
+      Handler: handlers/upload.handler
+      Description: Handles context item uploads from iOS app
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ContextItemsTable
+        - S3CrudPolicy:
+            BucketName: !Ref AttachmentsBucket
+      Events:
+        Upload:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /upload
+            Method: POST
+
+  # Lambda Function for MCP Server
+  McpServerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub context-builder-mcp-${Stage}
+      CodeUri: ./dist
+      Handler: handlers/mcp.handler
+      Description: MCP server for serving context to AI assistants
+      Timeout: 60
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ContextItemsTable
+        - S3ReadPolicy:
+            BucketName: !Ref AttachmentsBucket
+      FunctionUrlConfig:
+        AuthType: NONE
+        Cors:
+          AllowOrigins:
+            - '*'
+          AllowMethods:
+            - '*'
+          AllowHeaders:
+            - '*'
+          MaxAge: 300
+
+  # HTTP API Gateway
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: !Ref Stage
+      CorsConfiguration:
+        AllowOrigins:
+          - '*'
+        AllowHeaders:
+          - '*'
+        AllowMethods:
+          - '*'
+        MaxAge: 300
+
+  # Lambda Function for List Context Items
+  ListFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub context-builder-list-${Stage}
+      CodeUri: ./dist
+      Handler: handlers/list.handler
+      Description: Lists all context items for a user
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ContextItemsTable
+      Events:
+        List:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /list
+            Method: GET
+
+Outputs:
+  ApiEndpoint:
+    Description: HTTP API endpoint URL
+    Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}
+    Export:
+      Name: !Sub ${AWS::StackName}-ApiEndpoint
+
+  McpServerUrl:
+    Description: MCP Server Function URL
+    Value: !GetAtt McpServerFunctionUrl.FunctionUrl
+    Export:
+      Name: !Sub ${AWS::StackName}-McpServerUrl
+
+  ContextTableName:
+    Description: DynamoDB table name for context items
+    Value: !Ref ContextItemsTable
+    Export:
+      Name: !Sub ${AWS::StackName}-ContextTableName
+
+  AttachmentsBucketName:
+    Description: S3 bucket name for attachments
+    Value: !Ref AttachmentsBucket
+    Export:
+      Name: !Sub ${AWS::StackName}-AttachmentsBucketName

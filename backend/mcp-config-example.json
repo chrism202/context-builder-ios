@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "context-builder": {
+      "command": "node",
+      "args": [
+        "/absolute/path/to/context-builder-ios/backend/dist/handlers/mcp.js"
+      ],
+      "env": {
+        "CONTEXT_TABLE_NAME": "ContextItems-dev",
+        "ATTACHMENTS_BUCKET_NAME": "context-builder-attachments-dev-YOUR_ACCOUNT_ID",
+        "AWS_REGION": "us-east-1"
+      }
+    }
+  }
+}
